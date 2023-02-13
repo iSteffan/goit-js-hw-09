@@ -10,22 +10,25 @@ function convertMs(ms) {
   const day = hour * 24;
 
   // Remaining days
-  const days = Math.floor(ms / day);
+  const days = addLeadingZero(Math.floor(ms / day));
   // Remaining hours
-  const hours = Math.floor((ms % day) / hour);
+  const hours = addLeadingZero(Math.floor((ms % day) / hour));
   // Remaining minutes
-  const minutes = Math.floor(((ms % day) % hour) / minute);
+  const minutes = addLeadingZero(Math.floor(((ms % day) % hour) / minute));
   // Remaining seconds
-  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+  const seconds = addLeadingZero(
+    Math.floor((((ms % day) % hour) % minute) / second)
+  );
 
   return { days, hours, minutes, seconds };
 }
 
-console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
-console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
-console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
-
 const startBtnRef = document.querySelector('[data-start]');
+const daysToLeftRef = document.querySelector('[data-days]');
+const hoursToLeftRef = document.querySelector('[data-hours]');
+const minutesToLeftRef = document.querySelector('[data-minutes]');
+const secondsToLeftRef = document.querySelector('[data-seconds]');
+
 startBtnRef.disabled = true;
 
 const options = {
@@ -33,16 +36,46 @@ const options = {
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
+
   onClose(selectedDates) {
-    const date = new Date();
+    const date = Date.now();
     if (date > selectedDates[0]) {
       return Notiflix.Notify.failure('Please choose a date in the future');
     }
     startBtnRef.disabled = false;
-    console.log(selectedDates[0]);
+
+    startBtnRef.addEventListener('click', () => {
+      startBtnRef.disabled = true;
+
+      const timerId = setInterval(() => {
+        const initTimerDate = Date.now();
+        const timeToDeadline = selectedDates[0] - initTimerDate;
+        const { days, hours, minutes, seconds } = convertMs(timeToDeadline);
+
+        updateClockface({ days, hours, minutes, seconds });
+
+        if (
+          days === '00' &&
+          hours === '00' &&
+          minutes === '00' &&
+          seconds === '00'
+        ) {
+          clearInterval(timerId);
+        }
+      }, 1000);
+    });
   },
 };
 
 flatpickr('#datetime-picker', options);
 
-startBtnRef.addEventListener('click', () => {});
+function addLeadingZero(value) {
+  return String(value).padStart(2, '0');
+}
+
+function updateClockface({ days, hours, minutes, seconds }) {
+  daysToLeftRef.textContent = days;
+  hoursToLeftRef.textContent = hours;
+  minutesToLeftRef.textContent = minutes;
+  secondsToLeftRef.textContent = seconds;
+}
