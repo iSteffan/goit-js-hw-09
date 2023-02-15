@@ -27,7 +27,7 @@ refs.formRef.addEventListener('submit', e => {
   const amount = Number(refs.amountRef.value);
   const step = Number(refs.stepRef.value);
 
-  for (let i = 0; i < amount; i++) {
+  for (let i = 1; i <= amount; i++) {
     createPromise(i, delay + i * step)
       .then(({ position, delay }) => {
         Notiflix.Notify.success(
